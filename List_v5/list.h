@@ -20,6 +20,7 @@ public:
 
     class Iterator
     {
+	friend class TList;
         public:
             Iterator()
             {
