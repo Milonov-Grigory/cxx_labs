@@ -31,32 +31,83 @@ public:
 
     //friend class iterator;
 
-    /*class iterator{
+    class iterator{
         friend class HashTable;
-        Bucket* buckets;
-        size_t  S;
+        Bucket** buckets;
+        size_t  S;//пусть будет количество бакетов
         size_t  cur_bucket;
         Bucket* cur_element;
         friend class HashTable;
-        iterator(Bucket* b, size_t s, size_t cb, Bucket* ce)
+        iterator(Bucket** b, size_t s, size_t cb, Bucket* ce)
                 : buckets(b), S(s), cur_bucket(cb), cur_element(ce)
         {}
 
         public:
-            iterator(); // empty
+            iterator() = default; // empty
             iterator(const iterator& ) = default;
-            iterator& operator++();
+            bool operator!=(iterator& it) const{
+                return this->cur_element != it.cur_element;
+            }
+            bool operator!=(iterator&& it) const{
+                return this->cur_element != it.cur_element;
+            }
+            void operator++() {
+                if(cur_element && (cur_element->next || cur_bucket == S - 1)){
+                    cur_element = cur_element->next;
+                }
+                else{
+                    for (size_t i = cur_bucket; i < S; ++i) {
+                        cur_element = buckets[i];
+                        if (cur_element) {
+                            break;
+                        }
+                    }
+                }
+
+            }
+
             const char* key();
             Value& val();
             const Value& val() const;
-            bool operator=(const iterator& it) const;
+            iterator& operator=(const iterator& it) const {
+                buckets = it.buckets;
+                S = it.S;
+                cur_bucket = it.cur_bucket;
+                cur_element = it.cur_element;
+            }
+            iterator& operator=(iterator&& it) noexcept {
+                *this = std::move(it);
+                return *this;
+            }
     };
 
-    iterator begin();
-    iterator end();*/
+    iterator begin() {
+        Bucket* result = nullptr;
+        size_t count = 0;
+        while(!result && count < capacity){
+            result = buckets[count];
+            ++count;
+        }
+        return iterator(buckets, capacity, count, result);
+    }
+
+    iterator end() {
+        Bucket* result = nullptr;
+        size_t i = this->begin().cur_bucket;
+        for(i ; i < capacity; ++i){
+            result = buckets[i];
+            if(result) {
+                while (result->next) {
+                    result = result->next;
+                }
+            }
+        }
+        return iterator(buckets, capacity, i, result);
+    }
+
 private:
     unsigned int (*hashFunc)(const char*){};
-    size_t capacity{};
+    size_t capacity;
 };
 
 
@@ -110,3 +161,5 @@ void HashTable<Value>::insert(const char* key, Value v){
     newBucket->next = currentBucket;
     buckets[idx] = newBucket;
 }
+
+
