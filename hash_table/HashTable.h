@@ -3,7 +3,7 @@
 
 #include <string>
 #include <iostream>
-
+#include <cstring>
 template <typename Value>
 class HashTable{
 
@@ -95,7 +95,7 @@ bool HashTable<Value>::has(const char* key) const{
     Bucket* it = buckets[idx];
     while(it)
     {
-        if(!strcmp(it->key,key)) return true;
+        if(!strcmp(it->key.c_str(), key)) return true;
         it = it->next;
     }
     return false;
