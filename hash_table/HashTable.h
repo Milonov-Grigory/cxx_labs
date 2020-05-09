@@ -1,27 +1,26 @@
-//
-// Created by krage56 on 02.05.2020.
-//
 
 #pragma once
 
 #include <string>
+#include <iostream>
 
 template <typename Value>
 class HashTable{
 
-    struct Bucket{
+    class Bucket{
+    public:
         std::string key;
         Value val;
         Bucket* next;
-        Bucket(std::string& k, Value v) : key(k), val(v), next(0){}
-        ~Bucket() {}
+        Bucket(std::string& k, Value v) : key(k), val(v), next(nullptr){}
+        ~Bucket()=default;
     };
 
-    Bucket** buckets;
+    Bucket** buckets = nullptr;
 
 public:
 
-    //HashTable(size_t B, unsigned int (*HF)(const char*));
+    HashTable(size_t B, unsigned int (*HF)(const char*));
     HashTable()= default;
     ~HashTable();
 
@@ -32,7 +31,7 @@ public:
 
     //friend class iterator;
 
-    class iterator{
+    /*class iterator{
         friend class HashTable;
         Bucket* buckets;
         size_t  S;
@@ -54,9 +53,60 @@ public:
     };
 
     iterator begin();
-    iterator end();
+    iterator end();*/
 private:
-    unsigned int (*hashFunc)(const char*);
-    size_t capacity;
+    unsigned int (*hashFunc)(const char*){};
+    size_t capacity{};
 };
 
+
+template <typename Value>
+HashTable<Value>::HashTable(size_t B, unsigned int (*HF)(const char*)){
+    hashFunc = HF;
+    capacity = B;
+    buckets = new Bucket*[B];
+    for(size_t i = 0; i < capacity; ++i){
+        buckets[i] = nullptr;
+    }
+    for(size_t i = 0; i < capacity; ++i){
+        if(buckets[i] == nullptr){
+            std::cout << "nullptr\n";
+        }
+    }
+}
+
+template <typename Value>
+HashTable<Value>::~HashTable(){
+    Bucket* currentBucket = nullptr;
+    for(size_t i = 0; i < capacity; ++i){
+        currentBucket = buckets[i];
+        while(currentBucket){
+            Bucket* next = currentBucket->next;
+            delete currentBucket;
+            currentBucket = next;
+        }
+    }
+}
+
+
+template <typename Value>
+bool HashTable<Value>::has(const char* key) const{
+    size_t idx = (*hashFunc)(key) % capacity;
+    Bucket* it = buckets[idx];
+    while(it)
+    {
+        if(!strcmp(it->key,key)) return true;
+        it = it->next;
+    }
+    return false;
+}
+
+template <typename Value>
+void HashTable<Value>::insert(const char* key, Value v){
+    size_t idx = (*hashFunc)(key) % capacity;
+    Bucket* currentBucket = buckets[idx];
+    std::string str_key = key;
+    Bucket* newBucket = new Bucket(str_key, v);
+    newBucket->next = currentBucket;
+    buckets[idx] = newBucket;
+}
