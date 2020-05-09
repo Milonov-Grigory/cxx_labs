@@ -55,21 +55,28 @@ public:
                 if(cur_element && (cur_element->next || cur_bucket == S - 1)){
                     cur_element = cur_element->next;
                 }
-                else{
-                    for (size_t i = cur_bucket; i < S; ++i) {
+                else if(cur_element || cur_bucket != S - 1){
+                    for (size_t i = cur_bucket + 1; i < S; ++i) {
                         cur_element = buckets[i];
                         if (cur_element) {
+                            cur_bucket = i;
                             break;
                         }
                     }
                 }
-
             }
 
-            const char* key();
-            Value& val();
-            const Value& val() const;
-            iterator& operator=(const iterator& it) const {
+            std::string& key() {
+                return cur_element->key;
+            }
+            Value& val() {
+                return cur_element->val;
+            }
+            const Value& val() const {
+                return cur_element->val;
+            }
+
+        iterator& operator=(const iterator& it) const {
                 buckets = it.buckets;
                 S = it.S;
                 cur_bucket = it.cur_bucket;
@@ -84,11 +91,11 @@ public:
     iterator begin() {
         Bucket* result = nullptr;
         size_t count = 0;
-        while(!result && count < capacity){
+        while(!result && count < capacity ){
             result = buckets[count];
             ++count;
         }
-        return iterator(buckets, capacity, count, result);
+        return iterator(buckets, capacity, count - 1, result);
     }
 
     iterator end() {
@@ -102,7 +109,7 @@ public:
                 }
             }
         }
-        return iterator(buckets, capacity, i, result);
+        return iterator(buckets, capacity, i - 1, nullptr);
     }
 
 private:
